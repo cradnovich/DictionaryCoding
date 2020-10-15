@@ -940,21 +940,17 @@ extension __DictDecoder : SingleValueDecodingContainer {
 extension __DictDecoder {
   /// Returns the given value unboxed from a container.
   fileprivate func unbox(_ value: Any, as type: Bool.Type) throws -> Bool? {
-    if let _ = value as? NSNull { return nil }
-    
-    if let number = value as? NSNumber {
-      // TODO: Add a flag to coerce non-boolean numbers into Bools?
-      if number === NSNumber(booleanLiteral: true) {
-        return true
-      } else if number === NSNumber(booleanLiteral: false) {
-        return false
-      }
-      
-      /* FIXME: If swift-corelibs-foundation doesn't change to use NSNumber, this code path will need to be included and tested:
-       } else if let bool = value as? Bool {
-       return bool
-       */
-      
+    switch value {
+    case is NSNull:
+        return nil
+    case let b as Bool:
+        return b
+    case let i as Int:
+        return i != 0
+    case let number as NSNumber:
+        return number === NSNumber(booleanLiteral: true)
+    default:
+        break
     }
     
     throw DecodingError.typeMismatch(at: self.codingPath, expectation: type, reality: value)
